@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Chessboard } from 'react-chessboard'
-import { toPng } from 'html-to-image'
+import { toJpeg } from 'html-to-image'
 import { useGame } from '@/contexts/GameContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Chess } from 'chess.js'
@@ -91,7 +91,7 @@ export default function ChessBoard({ boardSize = 560 }: { boardSize?: number }) 
   useEffect(() => {
     if (!gameOver || !boardRef.current) return
     const timer = setTimeout(() => {
-      toPng(boardRef.current!, { cacheBust: true, pixelRatio: 2, skipFonts: true })
+      toJpeg(boardRef.current!, { cacheBust: true, pixelRatio: 1, quality: 0.8, skipFonts: true })
         .then((dataUrl) => setCapturedBoardImage(dataUrl))
         .catch((err: any) => console.warn('Board capture failed:', err))
     }, 500)
