@@ -1041,20 +1041,23 @@ export default function PromptInvaders() {
       ctx.drawImage(images.bg, 0, bgOffset, BASE_W, BASE_H);
       ctx.drawImage(images.bg, 0, bgOffset - BASE_H, BASE_W, BASE_H);
       
-      // Dark sci-fi overlay for deep space tint
-      const overGrad = ctx.createLinearGradient(0, 0, 0, BASE_H);
-      overGrad.addColorStop(0, 'rgba(6, 4, 16, 0.85)');
-      overGrad.addColorStop(0.5, 'rgba(12, 8, 28, 0.75)');
-      overGrad.addColorStop(1, 'rgba(6, 4, 16, 0.85)');
-      ctx.fillStyle = overGrad;
-      ctx.fillRect(0, 0, BASE_W, BASE_H);
+      // Dark sci-fi overlay for deep space tint (skip during NFT capture for full brightness)
+      const isCapturing = nftCaptureRef.current && gs.phase === 'gameover';
+      if (!isCapturing) {
+        const overGrad = ctx.createLinearGradient(0, 0, 0, BASE_H);
+        overGrad.addColorStop(0, 'rgba(6, 4, 16, 0.85)');
+        overGrad.addColorStop(0.5, 'rgba(12, 8, 28, 0.75)');
+        overGrad.addColorStop(1, 'rgba(6, 4, 16, 0.85)');
+        ctx.fillStyle = overGrad;
+        ctx.fillRect(0, 0, BASE_W, BASE_H);
 
-      // Vignette to darken edges
-      const vigGrad = ctx.createRadialGradient(BASE_W / 2, BASE_H / 2, BASE_H * 0.2, BASE_W / 2, BASE_H / 2, BASE_W * 0.7);
-      vigGrad.addColorStop(0, 'transparent');
-      vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
-      ctx.fillStyle = vigGrad;
-      ctx.fillRect(0, 0, BASE_W, BASE_H);
+        // Vignette to darken edges
+        const vigGrad = ctx.createRadialGradient(BASE_W / 2, BASE_H / 2, BASE_H * 0.2, BASE_W / 2, BASE_H / 2, BASE_W * 0.7);
+        vigGrad.addColorStop(0, 'transparent');
+        vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
+        ctx.fillStyle = vigGrad;
+        ctx.fillRect(0, 0, BASE_W, BASE_H);
+      }
     } else {
       const bgGrad = ctx.createLinearGradient(0, 0, 0, BASE_H);
       bgGrad.addColorStop(0, '#06060e');
