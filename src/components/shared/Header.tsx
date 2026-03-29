@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/chess', label: 'Chess' },
   { href: '/snake', label: 'Snake' },
+  { href: '/prompt-invaders', label: 'Invaders' },
 ]
 
 export default function Header() {

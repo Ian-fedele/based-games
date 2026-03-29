@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ArrowRight, ArrowLeft, Gamepad2, Zap, Users, ChevronRight, ExternalLink } from 'lucide-react'
+import { ArrowRight, Gamepad2, Zap, Users, ChevronRight, ExternalLink } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -421,39 +421,110 @@ const GAMES = [
     route: '/chess',
     image: '/chess-scrnshot.png',
   },
+  {
+    id: 'promptinvaders',
+    title: 'Prompt Invaders',
+    tag: 'Arcade Shooter',
+    description:
+      'Rogue chatbots have escaped the cloud — defend your inbox! Blast waves of spam bots, vision AIs, and AGI overlords in this satirical Space Invaders tribute. Grab power-ups like Triple Shot, Fact Check freeze, and RLHF Boost to survive the onslaught.',
+    color: '#00e5ff',
+    features: ['Wave-based combat', 'Power-up system', 'AI humor & satire'],
+    route: '/prompt-invaders',
+    image: '/images/prompt-invaders/cover.png',
+  },
 ]
 
-const GameCarousel = () => {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const sectionRef = useRef(null)
+const GameCard = ({ game, index }: { game: typeof GAMES[number]; index: number }) => {
   const cardRef = useRef(null)
+  const isEven = index % 2 === 0
 
-  const game = GAMES[activeIndex]
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(cardRef.current,
+        { y: 60, opacity: 0 },
+        {
+          scrollTrigger: {
+            trigger: cardRef.current,
+            start: 'top 85%',
+          },
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: 'power3.out',
+        }
+      )
+    }, cardRef)
 
-  const goTo = useCallback(
-    (index: number) => {
-      if (index === activeIndex) return
-      gsap.killTweensOf(cardRef.current)
-      gsap.to(cardRef.current, {
-        opacity: 0,
-        x: index > activeIndex ? -40 : 40,
-        duration: 0.3,
-        ease: 'power2.in',
-        onComplete: () => {
-          setActiveIndex(index)
-          gsap.fromTo(
-            cardRef.current,
-            { opacity: 0, x: index > activeIndex ? 40 : -40 },
-            { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }
-          )
-        },
-      })
-    },
-    [activeIndex]
+    const fallback = setTimeout(() => {
+      const el = cardRef.current as HTMLElement | null
+      if (el && parseFloat(getComputedStyle(el).opacity) === 0) {
+        el.style.opacity = '1'
+        el.style.transform = 'translateY(0)'
+      }
+    }, 2000)
+
+    return () => { ctx.revert(); clearTimeout(fallback) }
+  }, [])
+
+  return (
+    <div ref={cardRef} className="bg-surface/60 backdrop-blur-sm border border-white/5 rounded-3xl overflow-hidden">
+      <div className={cn('flex flex-col', isEven ? 'lg:flex-row' : 'lg:flex-row-reverse')}>
+        {/* Game screenshot */}
+        <Link
+          href={game.route}
+          className="w-full lg:w-1/2 h-64 lg:h-auto min-h-[400px] relative block cursor-pointer hover:opacity-90 transition-opacity"
+          style={{ background: `linear-gradient(135deg, ${game.color}15, ${game.color}05)` }}
+        >
+          <Image
+            src={game.image}
+            alt={`${game.title} screenshot`}
+            fill
+            className="object-contain p-4"
+          />
+        </Link>
+
+        {/* Info */}
+        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center items-center text-center lg:items-start lg:text-left">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono tracking-wide uppercase mb-4 w-fit"
+            style={{
+              background: `${game.color}15`,
+              color: game.color,
+              border: `1px solid ${game.color}30`,
+            }}
+          >
+            {game.tag}
+          </div>
+
+          <h3 className="font-heading font-bold text-3xl md:text-4xl text-primary mb-4">
+            {game.title}
+          </h3>
+
+          <p className="font-sans text-slate leading-relaxed mb-6">
+            {game.description}
+          </p>
+
+          <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
+            {game.features.map((f) => (
+              <span key={f} className="bg-white/5 border border-white/5 rounded-full text-primary/70 font-mono" style={{ fontSize: '14.4px', padding: '6px 16px' }}>
+                {f}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center lg:justify-start gap-3">
+            <MagneticButton linkTo={game.route} className="bg-accent text-background hover:bg-accentDark">
+              Play {game.title} <ExternalLink size={14} />
+            </MagneticButton>
+          </div>
+        </div>
+      </div>
+    </div>
   )
+}
 
-  const next = () => goTo((activeIndex + 1) % GAMES.length)
-  const prev = () => goTo((activeIndex - 1 + GAMES.length) % GAMES.length)
+const GamesSection = () => {
+  const sectionRef = useRef(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -492,95 +563,13 @@ const GameCarousel = () => {
           <h2 className="font-heading font-bold text-3xl md:text-5xl text-primary mb-2">
             Our <span className="text-accent">Games</span>
           </h2>
-          <p className="font-sans text-slate mb-4">Play now. Own forever.</p>
-
-          <div className="hidden md:flex items-center justify-center gap-3">
-            <button onClick={prev} className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-primary/60 hover:text-accent hover:border-accent/40 transition-all duration-300">
-              <ArrowLeft size={18} />
-            </button>
-            <button onClick={next} className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-primary/60 hover:text-accent hover:border-accent/40 transition-all duration-300">
-              <ArrowRight size={18} />
-            </button>
-          </div>
+          <p className="font-sans text-slate">Play now. Own forever.</p>
         </div>
 
-        {/* Carousel card */}
-        <div ref={cardRef} className="bg-surface/60 backdrop-blur-sm border border-white/5 rounded-3xl overflow-hidden">
-          <div className="flex flex-col lg:flex-row">
-            {/* Game screenshot */}
-            <Link
-              href={game.route}
-              className="w-full lg:w-1/2 h-64 lg:h-auto min-h-[400px] relative block cursor-pointer hover:opacity-90 transition-opacity"
-              style={{ background: `linear-gradient(135deg, ${game.color}15, ${game.color}05)` }}
-            >
-              <Image
-                src={game.image}
-                alt={`${game.title} screenshot`}
-                fill
-                className="object-contain p-4"
-              />
-            </Link>
-
-            {/* Info */}
-            <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center items-center text-center lg:items-start lg:text-left">
-              <div
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono tracking-wide uppercase mb-4 w-fit"
-                style={{
-                  background: `${game.color}15`,
-                  color: game.color,
-                  border: `1px solid ${game.color}30`,
-                }}
-              >
-                {game.tag}
-              </div>
-
-              <h3 className="font-heading font-bold text-3xl md:text-4xl text-primary mb-4">
-                {game.title}
-              </h3>
-
-              <p className="font-sans text-slate leading-relaxed mb-6">
-                {game.description}
-              </p>
-
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
-                {game.features.map((f) => (
-                  <span key={f} className="bg-white/5 border border-white/5 rounded-full text-primary/70 font-mono" style={{ fontSize: '14.4px', padding: '6px 16px' }}>
-                    {f}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-center lg:justify-start gap-3">
-                <MagneticButton linkTo={game.route} className="bg-accent text-background hover:bg-accentDark">
-                  Play {game.title} <ExternalLink size={14} />
-                </MagneticButton>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Dots */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          {GAMES.map((g, i) => (
-            <button
-              key={g.id}
-              onClick={() => goTo(i)}
-              className={cn(
-                'h-2 rounded-full transition-all duration-300',
-                i === activeIndex ? 'w-8 bg-accent' : 'w-2 bg-white/20 hover:bg-white/40'
-              )}
-            />
+        <div className="flex flex-col gap-8">
+          {GAMES.map((game, i) => (
+            <GameCard key={game.id} game={game} index={i} />
           ))}
-        </div>
-
-        {/* Mobile nav */}
-        <div className="flex md:hidden items-center justify-center gap-3 mt-4">
-          <button onClick={prev} className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-primary/60">
-            <ArrowLeft size={18} />
-          </button>
-          <button onClick={next} className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-primary/60">
-            <ArrowRight size={18} />
-          </button>
         </div>
       </div>
     </section>
@@ -661,7 +650,7 @@ const Roadmap = () => {
 
   return (
     <section id="roadmap" ref={containerRef} className="relative w-full z-10">
-      <RoadmapCard phase="Phase 01" title="Launch Games" desc="NeonSnake and ChessAI are live. Play now, connect your wallet, and start building your on-chain gaming identity." status="live" />
+      <RoadmapCard phase="Phase 01" title="Launch Games" desc="NeonSnake, ChessAI, and Prompt Invaders are live. Play now, connect your wallet, and start building your on-chain gaming identity." status="live" />
       <RoadmapCard phase="Phase 02" title="Expand the Library" desc="More games are coming. Each one designed to be fun first, with optional web3 features that add real ownership without getting in the way." status="building" />
       <RoadmapCard phase="Phase 03" title="Community & Tournaments" desc="Leaderboards, tournaments, and community events. Compete with players worldwide and earn rewards for your skills." status="upcoming" />
     </section>
@@ -776,7 +765,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <About />
-      <GameCarousel />
+      <GamesSection />
       <Roadmap />
       <Community />
       <FooterSection />
